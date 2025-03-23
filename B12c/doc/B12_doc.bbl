@@ -1,0 +1,15 @@
+\begin{thebibliography}{1}
+
+\bibitem{dellnitz2001algorithms}
+Michael Dellnitz, Gary Froyland, and Oliver Junge.
+\newblock The algorithms behind gaio - set oriented numerical methods for
+  dynamical systems.
+\newblock In {\em Ergodic theory, analysis, and efficient simulation of
+  dynamical systems}, pages 145--174. Springer, 2001.
+
+\bibitem{dellnitz2002set}
+Michael Dellnitz and Oliver Junge.
+\newblock Set oriented numerical methods for dynamical systems.
+\newblock {\em Handbook of dynamical systems}, 2(1):900, 2002.
+
+\end{thebibliography}

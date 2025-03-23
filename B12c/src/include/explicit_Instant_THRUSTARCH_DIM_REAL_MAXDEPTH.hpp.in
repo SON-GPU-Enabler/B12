@@ -1,0 +1,137 @@
+
+#define INCLUDE_IMPLICIT_BOX_TREE_MEMBER_DEFINITIONS
+#include "ImplicitBoxTree.h"
+#undef INCLUDE_IMPLICIT_BOX_TREE_MEMBER_DEFINITIONS
+
+
+namespace b12 {
+
+template class ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>;
+
+
+template ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::ImplicitBoxTree(
+    const typename ThrustSystem<@thrustarch@>::Vector<float>&,
+    const typename ThrustSystem<@thrustarch@>::Vector<float>&);
+template ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::ImplicitBoxTree(
+    const typename ThrustSystem<@thrustarch@>::Vector<double>&,
+    const typename ThrustSystem<@thrustarch@>::Vector<double>&);
+
+template ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::ImplicitBoxTree(
+    const typename ThrustSystem<@thrustarch@>::Vector<float>&,
+    const typename ThrustSystem<@thrustarch@>::Vector<float>&,
+    const typename ThrustSystem<@thrustarch@>::Vector<Dimension>&);
+template ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::ImplicitBoxTree(
+    const typename ThrustSystem<@thrustarch@>::Vector<float>&,
+    const typename ThrustSystem<@thrustarch@>::Vector<float>&,
+    const typename ThrustSystem<@thrustarch@>::Vector<uint64_t>&);
+template ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::ImplicitBoxTree(
+    const typename ThrustSystem<@thrustarch@>::Vector<double>&,
+    const typename ThrustSystem<@thrustarch@>::Vector<double>&,
+    const typename ThrustSystem<@thrustarch@>::Vector<Dimension>&);
+template ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::ImplicitBoxTree(
+    const typename ThrustSystem<@thrustarch@>::Vector<double>&,
+    const typename ThrustSystem<@thrustarch@>::Vector<double>&,
+    const typename ThrustSystem<@thrustarch@>::Vector<uint64_t>&);
+
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::changeFlagsByStencil(const bool *, Flags, Flags, Depth);
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::changeFlagsByStencil(
+    ThrustSystem<@thrustarch@>::Vector<bool>::const_iterator, Flags, Flags, Depth);
+
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::countIfFlags(AreFlagsSetFunctor, FlagsAndFunctor, Depth);
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::countIfFlags(
+    AreFlagsSetFunctor, FlagsAndFunctor, const bool *, Depth);
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::countIfFlags(
+    AreFlagsSetFunctor, FlagsAndFunctor, ThrustSystem<@thrustarch@>::Vector<bool>::const_iterator, Depth);
+
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::countIfFlags(AreFlagsSetFunctor, FlagsOrFunctor, Depth);
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::countIfFlags(
+    AreFlagsSetFunctor, FlagsOrFunctor, const bool *, Depth);
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::countIfFlags(
+    AreFlagsSetFunctor, FlagsOrFunctor, ThrustSystem<@thrustarch@>::Vector<bool>::const_iterator, Depth);
+
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::countIfFlags(IsAnyFlagSetFunctor, FlagsAndFunctor, Depth);
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::countIfFlags(
+    IsAnyFlagSetFunctor, FlagsAndFunctor, const bool *, Depth);
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::countIfFlags(
+    IsAnyFlagSetFunctor, FlagsAndFunctor, ThrustSystem<@thrustarch@>::Vector<bool>::const_iterator, Depth);
+
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::countIfFlags(IsAnyFlagSetFunctor, FlagsOrFunctor, Depth);
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::countIfFlags(
+    IsAnyFlagSetFunctor, FlagsOrFunctor, const bool *, Depth);
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::countIfFlags(
+    IsAnyFlagSetFunctor, FlagsOrFunctor, ThrustSystem<@thrustarch@>::Vector<bool>::const_iterator, Depth);
+
+template void 
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::insertByPoints(
+    const typename ThrustSystem<@thrustarch@>::Vector<@real@>&, Depth, Flags, Flags, bool *);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::insertByPoints(
+    const typename ThrustSystem<@thrustarch@>::Vector<@real@>&,
+    Depth, Flags, Flags,
+    ThrustSystem<@thrustarch@>::Vector<bool>::iterator);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::insertByPoints(
+    const typename ThrustSystem<@thrustarch@>::Vector<@real@>&,
+    Depth, Flags, Flags,
+    thrust::discard_iterator<>);
+
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::searchByPoints(
+    const typename ThrustSystem<@thrustarch@>::Vector<@real@>&, Depth, NrBoxes *);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::searchByPoints(
+    const typename ThrustSystem<@thrustarch@>::Vector<@real@>&,
+    Depth,
+    ThrustSystem<@thrustarch@>::Vector<NrBoxes>::iterator);
+
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::setFlagsByStencil(const bool *, Flags, Depth);
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::setFlagsByStencil(
+    ThrustSystem<@thrustarch@>::Vector<bool>::const_iterator, Flags, Depth);
+
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::unsetFlagsByStencil(const bool *, Flags, Depth);
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::unsetFlagsByStencil(
+    ThrustSystem<@thrustarch@>::Vector<bool>::const_iterator, Flags, Depth);
+
+template typename ThrustSystem<@thrustarch@>::Vector<@real@>&
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::setCenter(
+    const typename ThrustSystem<@thrustarch@>::Vector<float>&);
+template typename ThrustSystem<@thrustarch@>::Vector<@real@>&
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::setCenter(
+    const typename ThrustSystem<@thrustarch@>::Vector<double>&);
+
+template typename ThrustSystem<@thrustarch@>::Vector<@real@>&
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::setRadius(
+    const typename ThrustSystem<@thrustarch@>::Vector<float>&);
+template typename ThrustSystem<@thrustarch@>::Vector<@real@>&
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::setRadius(
+    const typename ThrustSystem<@thrustarch@>::Vector<double>&);
+
+template typename ThrustSystem<@thrustarch@>::Vector<Dimension>&
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::setSdScheme(
+    const typename ThrustSystem<@thrustarch@>::Vector<Dimension>&);
+template typename ThrustSystem<@thrustarch@>::Vector<Dimension>&
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::setSdScheme(
+    const typename ThrustSystem<@thrustarch@>::Vector<uint64_t>&);
+
+template std::ostream&
+operator<<(std::ostream&, const ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>&);
+
+} // namespace b12

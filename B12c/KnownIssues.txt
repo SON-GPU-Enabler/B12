@@ -1,0 +1,4 @@
+
+The following functions can cause use of local memory and, for some compute capabilities, even register spilling:
+  thrust::sort[_by_key]
+  mathematical functions like sin(), but not sinpi() or atan()

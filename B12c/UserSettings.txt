@@ -1,0 +1,59 @@
+
+# Set your nVidia GPU's compute capability, see e.g. https://developer.nvidia.com/cuda-gpus
+# If no CUDA capable graphics card is available, set the value to "3.5"!
+# set(computeCapability "3.5")
+# set(computeCapability "3.7")
+set(computeCapability "5.2")
+
+# Set the path where B12 shall be installed in
+set(installPath "/opt")
+# set(installPath "/scratch/wir/mwagner")
+
+# Architectures which everything is compiled for
+# supported options: "CPP" (sequential on CPU), "OMP" (parallel on CPU), "TBB" (parallel on CPU), "CUDA" (parallel on GPU)
+# set(ThrustArchitectures "CPP" "CUDA" "OMP")
+set(ThrustArchitectures "OMP")
+
+
+# Dimensions which ImplicitBoxTree and all Grids are compiled for
+# set(Dimensions "2" "3" "4")
+set(Dimensions "1" "2" "3")
+
+# Floating-point precisions which ImplicitBoxTree and all Maps are compiled for (only "float" and "double" supported)
+# set(Reals "double" "float")
+set(Reals "double")
+
+# Maximal Depths which ImplicitBoxTree is compiled for (only 32, 64 (recommended), 72, 80, 96, and 128 supported)
+set(MaxDepths "32" "64")
+
+
+# Define some Grids
+set(FaceGrid    "2") # FaceGrid's constructor takes 2 arguments
+set(FullGrid    "2") # FullGrid's constructor takes 2 arguments
+set(InnerGrid   "1") # InnerGrid's constructor takes 1 argument
+set(UniformGrid "2") # UniformGrid's constructor takes 2 arguments
+
+# List of grids that are supposed to be compiled
+# set(Grids "FaceGrid" "FullGrid" "InnerGrid" "UniformGrid")
+set(Grids "InnerGrid")
+
+
+# Define some Maps
+set(Chua         "3"   "6"  )
+set(Duffing      "2"   "3"  ) # Duffing is defined as a 2-dimensional map with a constructor taking 3 arguments
+set(Henon        "2"   "3"  )
+set(HookesLaw    "2"   "5"  )
+set(Ikeda        "2"   "5"  )
+set(Lorenz       "3"   "5"  )
+set(Moussa       "2"   "3"  )
+set(Standard     "2 4" "2 4")
+set(StandardBO   "2 4" "2 3")
+set(StandardBO2  "2 4" "2 3")
+set(StandardOpen "2 4" "2 4")
+set(TDuffing     "2"   "3"  )
+set(VanDerPol    "2 3" "3 5") # VanDerPol is a 2- or 3-dim. map whose constructors take 3 or 5 arguments, respectively
+
+# List of maps that are supposed to be compiled
+# map Identity is automatically compiled for each combination of Architecture and Dimension
+# set(Maps "Chua" "Duffing" "Henon" "HookesLaw" "Ikeda" "Lorenz" "Moussa" "Standard" "StandardBO" "StandardBO2" "StandardOpen" "TDuffing" "VanDerPol")
+set(Maps "Chua" "Henon" "Ikeda" "Lorenz" "StandardBO2")

@@ -1,0 +1,1858 @@
+
+#include <mex.h>
+#include "matrix.h"
+
+#include "class_handle.hpp"
+
+#include <thrust/copy.h>
+#include <thrust/functional.h>
+#include <thrust/iterator/discard_iterator.h>
+#include <thrust/transform.h>
+
+#include "preprocessor_definitions.h"
+
+#include "TypeDefinitions.h"
+#include "ThrustSystem.h"
+#include "Grids.h"
+#include "Maps.h"
+#include "ImplicitBoxTree.h"
+
+
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
+  // prhs[0] ... command string
+  // prhs[1] ... class instance handle; for "new" 0 is given as placeholder
+  // prhs[2] ... dimension
+  // prhs[3-]... other input arguments
+  
+  // Get the command string
+  char command[255];
+  if (nrhs < 1 || mxGetString(prhs[0], command, sizeof(command) + 1)) {
+    mexErrMsgTxt("First input should be a command string less than 255 characters long.");
+  }
+  if (nrhs < 2) {
+    mexErrMsgTxt("Second input should be a class instance handle.");
+  }
+  if (nrhs < 3) {
+    mexErrMsgTxt("Third input should be a value indicating the dimension.");
+  }
+  if (nrhs < 4) {
+    mexErrMsgTxt("Fourth input should be a string indicating the precision.");
+  }
+  if (nrhs < 5) {
+    mexErrMsgTxt("Fifth input should be a value indicating the maximal possible depth.");
+  }
+  
+  // Get dimension
+  uint64_t DIM = *((uint64_t *) mxGetData(prhs[2]));
+  // Get precision
+  char REAL[255];
+  mxGetString(prhs[3], REAL, sizeof(REAL) + 1);
+  if (!strcmp("single", REAL)) {
+    strcpy(REAL, "float");
+  }
+  // Get maximal depth
+  uint64_t MAXDEPTH = *((uint64_t *) mxGetData(prhs[4]));
+  
+  // New, default constructor: takes first b12::Dimension-precision-maxDepth-tuple defined in boost_seq_defs.h
+  if (!strcmp("new_no_input", command)) {
+    plhs[0] = 
+        convertPtr2Mat<b12::ImplicitBoxTree<b12::@thrustarch@, FIRST_DIM, FIRST_REAL, FIRST_MAXDEPTH>>(
+            new b12::ImplicitBoxTree<b12::@thrustarch@, FIRST_DIM, FIRST_REAL, FIRST_MAXDEPTH>());
+    // Return dimension to a new C++ instance
+    plhs[1] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * prDIM = (uint64_t *) mxGetData(plhs[1]);
+    *prDIM = FIRST_DIM;
+    plhs[2] = mxCreateString(FIRST_REAL_STRING);
+    plhs[3] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * prMAXDEPTH = (uint64_t *) mxGetData(plhs[3]);
+    *prMAXDEPTH = FIRST_MAXDEPTH;
+    return;
+  }
+  
+  // New, default constructor with template arguments specified by passed arguments
+  if (!strcmp("new_default", command)) {
+    // Return a handle to a new C++ instance
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                             \
+  plhs[0] = convertPtr2Mat<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>( \
+      new b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>());
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("New: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    // Return template arguments to a new C++ instance
+    plhs[1] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * prDIM = (uint64_t *) mxGetData(plhs[1]);
+    *prDIM = DIM;
+    if (!strcmp("float", REAL)) {
+      strcpy(REAL, "single");
+    }
+    plhs[2] = mxCreateString(REAL);
+    plhs[3] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * prMAXDEPTH = (uint64_t *) mxGetData(plhs[3]);
+    *prMAXDEPTH = MAXDEPTH;
+    return;
+  }
+  
+  // New (read from file)
+  if (!strcmp("new_file", command)) {
+    // Return a handle to a new C++ instance
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                      \
+  plhs[0] = convertPtr2Mat<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(          \
+      new b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>(mxArrayToString(prhs[5])));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("New: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    // Return template arguments to a new C++ instance
+    plhs[1] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * prDIM = (uint64_t *) mxGetData(plhs[1]);
+    *prDIM = DIM;
+    if (!strcmp("float", REAL)) {
+      strcpy(REAL, "single");
+    }
+    plhs[2] = mxCreateString(REAL);
+    plhs[3] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * prMAXDEPTH = (uint64_t *) mxGetData(plhs[3]);
+    *prMAXDEPTH = MAXDEPTH;
+    return;
+  }
+  
+  // New, constructor using coordinate vectors
+  if (!strcmp("new_vectors", command)) {
+    // Return a handle to a new C++ instance
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                             \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<b12::Dimension> temp(             \
+      (uint64_t *) mxGetData(prhs[7]),                                                    \
+      (uint64_t *) mxGetData(prhs[7]) + mxGetM(prhs[7]) * mxGetN(prhs[7]));               \
+  thrust::transform(typename b12::ThrustSystem<b12::@thrustarch@>::execution_policy(),    \
+                    temp.begin(), temp.end(),                                             \
+                    temp.begin(),                                                         \
+                    thrust::placeholders::_1 - b12::Dimension(1));                        \
+  plhs[0] = convertPtr2Mat<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>( \
+      new b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>(                   \
+          typename b12::ThrustSystem<b12::@thrustarch@>::Vector<real>(                    \
+              (real *) mxGetData(prhs[5]),                                                \
+              (real *) mxGetData(prhs[5]) + mxGetM(prhs[5]) * mxGetN(prhs[5])),           \
+          typename b12::ThrustSystem<b12::@thrustarch@>::Vector<real>(                    \
+              (real *) mxGetData(prhs[6]),                                                \
+              (real *) mxGetData(prhs[6]) + mxGetM(prhs[6]) * mxGetN(prhs[6])),           \
+          temp));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("New: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    // Return template arguments to a new C++ instance
+    plhs[1] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * prDIM = (uint64_t *) mxGetData(plhs[1]);
+    *prDIM = DIM;
+    if (!strcmp("float", REAL)) {
+      strcpy(REAL, "single");
+    }
+    plhs[2] = mxCreateString(REAL);
+    plhs[3] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * prMAXDEPTH = (uint64_t *) mxGetData(plhs[3]);
+    *prMAXDEPTH = MAXDEPTH;
+    return;
+  }
+  
+#if USE_CPP != -1
+  // New (copy of b12::ImplicitBoxTree)
+  if (!strcmp("new_ImplicitBoxTree", command)) {
+    // Get dimension of b12::ImplicitBoxTree to copy
+    uint64_t DIM2 = *((uint64_t *) mxGetData(prhs[6]));
+    // Get precision of b12::ImplicitBoxTree to copy
+    char REAL2[255];
+    mxGetString(prhs[7], REAL2, sizeof(REAL2) + 1);
+    if (!strcmp("single", REAL2)) {
+      strcpy(REAL2, "float");
+    }
+    // Get maximal depth of b12::ImplicitBoxTree to copy
+    uint64_t MAXDEPTH2 = *((uint64_t *) mxGetData(prhs[8]));
+    // Return a handle to a new C++ instance
+    if (0) {
+    }
+# define LOCAL_NESTED_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth, dim2, real2, maxDepth2)   \
+  plhs[0] = convertPtr2Mat<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(       \
+      new b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>(                         \
+          *(convertMat2Ptr<b12::ImplicitBoxTree<b12::CPP, dim2, real2, maxDepth2>>(prhs[5]))));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_DIMS2_REALS2_MAXDEPTHS2
+# undef LOCAL_NESTED_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("New: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    // Return template arguments to a new C++ instance
+    plhs[1] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * prDIM = (uint64_t *) mxGetData(plhs[1]);
+    *prDIM = DIM;
+    if (!strcmp("float", REAL)) {
+      strcpy(REAL, "single");
+    }
+    plhs[2] = mxCreateString(REAL);
+    plhs[3] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * prMAXDEPTH = (uint64_t *) mxGetData(plhs[3]);
+    *prMAXDEPTH = MAXDEPTH;
+    return;
+  }
+#endif
+  
+#if USE_OMP != -1
+  // New (copy of b12::ompImplicitBoxTree)
+  if (!strcmp("new_ompImplicitBoxTree", command)) {
+    // Get dimension of b12::ImplicitBoxTree to copy
+    uint64_t DIM2 = *((uint64_t *) mxGetData(prhs[6]));
+    // Get precision of b12::ImplicitBoxTree to copy
+    char REAL2[255];
+    mxGetString(prhs[7], REAL2, sizeof(REAL2) + 1);
+    if (!strcmp("single", REAL2)) {
+      strcpy(REAL2, "float");
+    }
+    // Get maximal depth of b12::ImplicitBoxTree to copy
+    uint64_t MAXDEPTH2 = *((uint64_t *) mxGetData(prhs[8]));
+    // Return a handle to a new C++ instance
+    if (0) {
+    }
+# define LOCAL_NESTED_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth, dim2, real2, maxDepth2)   \
+  plhs[0] = convertPtr2Mat<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(       \
+      new b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>(                         \
+          *(convertMat2Ptr<b12::ImplicitBoxTree<b12::OMP, dim2, real2, maxDepth2>>(prhs[5]))));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_DIMS2_REALS2_MAXDEPTHS2
+# undef LOCAL_NESTED_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("New: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    // Return template arguments to a new C++ instance
+    plhs[1] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * prDIM = (uint64_t *) mxGetData(plhs[1]);
+    *prDIM = DIM;
+    if (!strcmp("float", REAL)) {
+      strcpy(REAL, "single");
+    }
+    plhs[2] = mxCreateString(REAL);
+    plhs[3] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * prMAXDEPTH = (uint64_t *) mxGetData(plhs[3]);
+    *prMAXDEPTH = MAXDEPTH;
+    return;
+  }
+#endif
+  
+#if USE_TBB != -1
+  // New (copy of b12::tbbImplicitBoxTree)
+  if (!strcmp("new_tbbImplicitBoxTree", command)) {
+    // Get dimension of b12::ImplicitBoxTree to copy
+    uint64_t DIM2 = *((uint64_t *) mxGetData(prhs[6]));
+    // Get precision of b12::ImplicitBoxTree to copy
+    char REAL2[255];
+    mxGetString(prhs[7], REAL2, sizeof(REAL2) + 1);
+    if (!strcmp("single", REAL2)) {
+      strcpy(REAL2, "float");
+    }
+    // Get maximal depth of b12::ImplicitBoxTree to copy
+    uint64_t MAXDEPTH2 = *((uint64_t *) mxGetData(prhs[8]));
+    // Return a handle to a new C++ instance
+    if (0) {
+    }
+# define LOCAL_NESTED_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth, dim2, real2, maxDepth2)   \
+  plhs[0] = convertPtr2Mat<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(       \
+      new b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>(                         \
+          *(convertMat2Ptr<b12::ImplicitBoxTree<b12::TBB, dim2, real2, maxDepth2>>(prhs[5]))));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_DIMS2_REALS2_MAXDEPTHS2
+# undef LOCAL_NESTED_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("New: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    // Return template arguments to a new C++ instance
+    plhs[1] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * prDIM = (uint64_t *) mxGetData(plhs[1]);
+    *prDIM = DIM;
+    if (!strcmp("float", REAL)) {
+      strcpy(REAL, "single");
+    }
+    plhs[2] = mxCreateString(REAL);
+    plhs[3] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * prMAXDEPTH = (uint64_t *) mxGetData(plhs[3]);
+    *prMAXDEPTH = MAXDEPTH;
+    return;
+  }
+#endif
+  
+#if USE_CUDA != -1
+  // New (copy of b12::gpuImplicitBoxTree)
+  if (!strcmp("new_gpuImplicitBoxTree", command)) {
+    // Get dimension of b12::ImplicitBoxTree to copy
+    uint64_t DIM2 = *((uint64_t *) mxGetData(prhs[6]));
+    // Get precision of b12::ImplicitBoxTree to copy
+    char REAL2[255];
+    mxGetString(prhs[7], REAL2, sizeof(REAL2) + 1);
+    if (!strcmp("single", REAL2)) {
+      strcpy(REAL2, "float");
+    }
+    // Get maximal depth of b12::ImplicitBoxTree to copy
+    uint64_t MAXDEPTH2 = *((uint64_t *) mxGetData(prhs[8]));
+    // Return a handle to a new C++ instance
+    if (0) {
+    }
+# define LOCAL_NESTED_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth, dim2, real2, maxDepth2)    \
+  plhs[0] = convertPtr2Mat<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(        \
+      new b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>(                          \
+          *(convertMat2Ptr<b12::ImplicitBoxTree<b12::CUDA, dim2, real2, maxDepth2>>(prhs[5]))));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_DIMS2_REALS2_MAXDEPTHS2
+# undef LOCAL_NESTED_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("New: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    // Return template arguments to a new C++ instance
+    plhs[1] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * prDIM = (uint64_t *) mxGetData(plhs[1]);
+    *prDIM = DIM;
+    if (!strcmp("float", REAL)) {
+      strcpy(REAL, "single");
+    }
+    plhs[2] = mxCreateString(REAL);
+    plhs[3] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * prMAXDEPTH = (uint64_t *) mxGetData(plhs[3]);
+    *prMAXDEPTH = MAXDEPTH;
+    return;
+  }
+#endif
+  
+  // Delete
+  if (!strcmp("delete", command)) {
+    // Destroy the C++ object
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth) \
+  destroyObject<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexWarnMsgTxt("Delete: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  /// Call the various member methods
+  
+  // areAllLeavesOnDepth
+  if (!strcmp("areAllLeavesOnDepth", command)) {
+    // Get depth from argument
+    b12::Depth depth = *((int64_t *) mxGetData(prhs[5]));
+    // output areAllLeavesOnDepth(depth)
+    plhs[0] = mxCreateLogicalMatrix(1, 1);
+    bool * pr = (bool *) mxGetData(plhs[0]);
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                       \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+      areAllLeavesOnDepth(depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("HaveAllLeavesDepth: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  // boxes
+  if (!strcmp("boxes", command)) {
+    // Get depth from argument
+    b12::Depth depth = *((int64_t *) mxGetData(prhs[5]));
+    // 1) Get "matrix" (actually a vector)
+    // 2) Allocate for output argument
+    // 3) Copy result from 1) to memory of 2) with eventual conversion from Real to mxREALType
+    if (b12::ThrustSystem<b12::@thrustarch@>::Memory::isOnHost()) {
+      if (!strcmp("double", REAL)) {
+        if (0) {
+        }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                                \
+  plhs[0] = mxCreateDoubleMatrix(                                                                            \
+      2 * dim + 1,                                                                                           \
+      (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->count(depth), \
+      mxREAL);                                                                                               \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                  \
+      boxes(depth, (real *) mxGetData(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+        else {
+          mexErrMsgTxt("Boxes: Invalid dimension, floating-point precision, or maximal possible depth.");
+        }
+      } else {
+        if (0) {
+        }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                                \
+  plhs[0] = mxCreateNumericMatrix(                                                                           \
+      2 * dim + 1,                                                                                           \
+      (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->count(depth), \
+      mxSINGLE_CLASS, mxREAL);                                                                               \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                  \
+      boxes(depth, (real *) mxGetData(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+        else {
+          mexErrMsgTxt("Boxes: Invalid dimension, floating-point precision, or maximal possible depth.");
+        }
+      }
+    } else {
+      if (!strcmp("double", REAL)) {
+        if (0) {
+        }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                                 \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<real> res(                                            \
+      (2 * dim + 1) *                                                                                         \
+      (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->count(depth)); \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                   \
+      boxes(depth, thrust::raw_pointer_cast(res.data()));                                                     \
+  plhs[0] = mxCreateDoubleMatrix(                                                                             \
+      2 * dim + 1,                                                                                            \
+      (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->count(depth),  \
+      mxREAL);                                                                                                \
+  thrust::copy(res.begin(), res.end(), mxGetPr(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+        else {
+          mexErrMsgTxt("Boxes: Invalid dimension, floating-point precision, or maximal possible depth.");
+        }
+      } else {
+        if (0) {
+        }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                                 \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<real> res(                                            \
+      (2 * dim + 1) *                                                                                         \
+      (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->count(depth)); \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                   \
+      boxes(depth, thrust::raw_pointer_cast(res.data()));                                                     \
+  plhs[0] = mxCreateNumericMatrix(                                                                            \
+      2 * dim + 1,                                                                                            \
+      (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->count(depth),  \
+      mxSINGLE_CLASS, mxREAL);                                                                                \
+  thrust::copy(res.begin(), res.end(), (real *) mxGetData(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+        else {
+          mexErrMsgTxt("Boxes: Invalid dimension, floating-point precision, or maximal possible depth.");
+        }
+      }
+    }
+    return;
+  }
+  
+  // center
+  if (!strcmp("center", command)) {
+    if (!strcmp("double", REAL)) {
+      plhs[0] = mxCreateDoubleMatrix(DIM, 1, mxREAL);
+    } else {
+      plhs[0] = mxCreateNumericMatrix(DIM, 1, mxSINGLE_CLASS, mxREAL);
+    }
+    if (nrhs == 5) {
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                                \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<real> res(                                           \
+      (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->getCenter()); \
+  thrust::copy(res.begin(), res.end(), (real *) mxGetData(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("Center: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    } else { // 6th argument is center vector to set
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                                    \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<real> res(                                               \
+      (real *) mxGetData(prhs[5]),                                                                               \
+      (real *) mxGetData(prhs[5]) + dim);                                                                        \
+  res = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->setCenter(res); \
+  thrust::copy(res.begin(), res.end(), (real *) mxGetData(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("Center: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    }
+    return;
+  }
+  
+  // changeFlags
+  if (!strcmp("changeFlags", command)) {
+    // get command string of changeFlags
+    char method[255];
+    mxGetString(prhs[5], method, sizeof(method) + 1);
+    // output changeFlags(...)
+    plhs[0] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * pr = (uint64_t *) mxGetData(plhs[0]);
+    if (!strcmp("all", method)) {
+      // get input variables
+      b12::Flags flagsToUnset = *((uint64_t *) mxGetData(prhs[6]));
+      b12::Flags flagsToSet = *((uint64_t *) mxGetData(prhs[7]));
+      b12::Depth depth = *((int64_t *) mxGetData(prhs[8]));
+      // compute
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                       \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+      changeFlags(flagsToUnset, flagsToSet, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("ChangeFlags: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    } else if (!strcmp("logical", method)) {
+      // get input variables
+      typename b12::ThrustSystem<b12::@thrustarch@>::Vector<bool> stencil(
+          (bool *) mxGetData(prhs[6]),
+          (bool *) mxGetData(prhs[6]) + mxGetM(prhs[6]) * mxGetN(prhs[6]));
+      b12::Flags flagsToUnset = *((uint64_t *) mxGetData(prhs[7]));
+      b12::Flags flagsToSet = *((uint64_t *) mxGetData(prhs[8]));
+      b12::Depth depth = *((int64_t *) mxGetData(prhs[9]));
+      // compute
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                       \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+      changeFlagsByStencil(stencil.begin(), flagsToUnset, flagsToSet, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("ChangeFlags: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    } else if (!strcmp("points", method)) {
+      // get input variables
+      b12::Flags flagsToUnset = *((uint64_t *) mxGetData(prhs[7]));
+      b12::Flags flagsToSet = *((uint64_t *) mxGetData(prhs[8]));
+      b12::Depth depth = *((int64_t *) mxGetData(prhs[9]));
+      // compute
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                       \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<real> points(                               \
+      (real *) mxGetData(prhs[6]),                                                                  \
+      (real *) mxGetData(prhs[6]) + mxGetM(prhs[6]) * mxGetN(prhs[6]));                             \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+      changeFlagsByPoints(points, flagsToUnset, flagsToSet, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("ChangeFlags: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    } else if (!strcmp("cell", method)) {
+      // get input variables
+      char gridType[255]; // do not change the name since it is used by preprocessor macros
+      mxGetString(prhs[6], gridType, sizeof(gridType) + 1);
+      uint64_t * gridParams = (uint64_t *) mxGetData(prhs[7]);
+      int nGridParams = mxGetNumberOfElements(prhs[7]);
+      char mapType[255]; // do not change the name since it is used by preprocessor macros
+      mxGetString(prhs[8], mapType, sizeof(mapType) + 1);
+      double * mapParams = mxGetPr(prhs[9]);
+      int nMapParams = mxGetNumberOfElements(prhs[9]);
+      b12::Depth depth_it = *((int64_t *) mxGetData(prhs[10]));
+      b12::Flags flagsToCheck = *((uint64_t *) mxGetData(prhs[11]));
+      b12::Flags flagsToUnset = *((uint64_t *) mxGetData(prhs[12]));
+      b12::Flags flagsToSet = *((uint64_t *) mxGetData(prhs[13]));
+      b12::Depth depth = *((int64_t *) mxGetData(prhs[14]));
+      // compute
+      if (flagsToCheck == b12::Flag::NONE) {
+        if (depth_it == 0) {
+          if (0) {
+          }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverRoot(b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                   \
+                                    b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                     \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->              \
+      changeFlagsByIterators(iterPair, flagsToUnset, flagsToSet, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+          else {
+            mexErrMsgTxt("ChangeFlags: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+          }
+        } else if (depth_it == b12::getLeafDepth()) {
+          if (0) {
+          }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverLeaves(b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                 \
+                                      b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                   \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->              \
+      changeFlagsByIterators(iterPair, flagsToUnset, flagsToSet, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+          else {
+            mexErrMsgTxt("ChangeFlags: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+          }
+        } else {
+          if (0) {
+          }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverDepth(depth_it,                                                                   \
+                                     b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                  \
+                                     b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                    \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->              \
+      changeFlagsByIterators(iterPair, flagsToUnset, flagsToSet, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+          else {
+            mexErrMsgTxt("ChangeFlags: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+          }
+        }
+      } else {
+        if (0) {
+        }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairByFlags(depth_it,                                                                     \
+                                   flagsToCheck,                                                                 \
+                                   b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                    \
+                                   b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                      \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->              \
+      changeFlagsByIterators(iterPair, flagsToUnset, flagsToSet, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+        else {
+          mexErrMsgTxt("ChangeFlags: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+        }
+      }
+    } else {
+      mexErrMsgTxt("ChangeFlags: Invalid command string.");
+    }
+    return;
+  }
+  
+  // count
+  if (!strcmp("count", command)) {
+    // Get depth from argument
+    b12::Depth depth = *((int64_t *) mxGetData(prhs[5]));
+    // output count(depth)
+    plhs[0] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * pr = (uint64_t *) mxGetData(plhs[0]);
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth) \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->count(depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("Count: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  // deleteDepth
+  if (!strcmp("deleteDepth", command)) {
+    // Get depth from argument
+    b12::Depth depth = *((int64_t *) mxGetData(prhs[5]));
+    // output deleteDepth(depth)
+    plhs[0] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * pr = (uint64_t *) mxGetData(plhs[0]);
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth) \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->deleteDepth(depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("DeleteDepth: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  // depth
+  if (!strcmp("depth", command)) {
+    // output depth()
+    plhs[0] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * pr = (uint64_t *) mxGetData(plhs[0]);
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth) \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->depth();
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("b12::Depth: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  // depths
+  if (!strcmp("depths", command)) {
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                                     \
+  typename b12::ThrustSystem<b12::HOST>::Vector<b12::Depth> res(                                                  \
+      (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->getDepthVector()); \
+  plhs[0] = mxCreateNumericMatrix(1, res.size(), mxUINT64_CLASS, mxREAL);                                         \
+  thrust::copy(res.begin(), res.end(), (uint64_t *) mxGetData(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("Depths: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  // enumerate
+  if (!strcmp("enumerate", command)) {
+    if (0) {
+    }
+      // use copy to guarantee right type conversion (b12::NrBoxes -> uint64_t)
+      // no real problem here since res is small (<= DEPTH_MAX + 1)
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                                \
+  typename b12::ThrustSystem<b12::HOST>::Vector<b12::NrBoxes> res(                                           \
+      (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->enumerate()); \
+  plhs[0] = mxCreateNumericMatrix(res.size(), 1, mxUINT64_CLASS, mxREAL);                                    \
+  thrust::copy(res.begin(), res.end(), (uint64_t *) mxGetData(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("Enumerate: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  // flags
+  if (!strcmp("flags", command)) {
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                                     \
+  typename b12::ThrustSystem<b12::HOST>::Vector<b12::Flags> res(                                                  \
+      (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->getFlagsVector()); \
+  plhs[0] = mxCreateNumericMatrix(1, res.size(), mxUINT64_CLASS, mxREAL);                                         \
+  thrust::copy(res.begin(), res.end(), (uint64_t *) mxGetData(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("Flags: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  // hasSameBoxes
+  if (!strcmp("hasSameBoxes", command)) {
+    // Get dimension of b12::ImplicitBoxTree to compare
+    uint64_t DIM2 = *((uint64_t *) mxGetData(prhs[6]));
+    // Get precision of b12::ImplicitBoxTree to compare
+    char REAL2[255];
+    mxGetString(prhs[7], REAL2, sizeof(REAL2) + 1);
+    if (!strcmp("single", REAL2)) {
+      strcpy(REAL2, "float");
+    }
+    uint64_t MAXDEPTH2 = *((uint64_t *) mxGetData(prhs[8]));
+    // ouput this->hasSameBoxes(ibt)
+    plhs[0] = mxCreateLogicalMatrix(1, 1);
+    bool * pr = (bool *) mxGetData(plhs[0]);
+    if (0) {
+    }
+    // both objects are on the same Architecture due to the Matlab-implementation prior to the call of this mexFunction
+# define LOCAL_NESTED_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth, dim2, real2, maxDepth2)                    \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->              \
+      hasSameBoxes(*(convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim2, real2, maxDepth2>>(prhs[5])));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_DIMS2_REALS2_MAXDEPTHS2
+# undef LOCAL_NESTED_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("HasSameBoxes: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  // initializeIndicesInDepth
+  if (!strcmp("initializeIndicesInDepth", command)) {
+    b12::Depth depth = *((int64_t *) mxGetData(prhs[5]));
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                               \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+      initializeIndicesInDepth(depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("InitializeIndicesInDepth: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  // initializeLeafIndicesFromDepth
+  if (!strcmp("initializeLeafIndicesFromDepth", command)) {
+    b12::Depth depth = *((int64_t *) mxGetData(prhs[5]));
+    b12::Flags flags = *((uint64_t *) mxGetData(prhs[6]));
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                               \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+      initializeLeafIndicesFromDepth(depth, flags);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("InitializeLeafIndicesFromDepth: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  // insert
+  if (!strcmp("insert", command)) {
+    // get command string of changeFlags
+    char method[255];
+    mxGetString(prhs[5], method, sizeof(method) + 1);
+    if (!strcmp("points", method)) {
+      // Get input arguments
+      b12::Depth depth = *((int64_t *) mxGetData(prhs[7]));
+      b12::Flags flagsToUnset = *((uint64_t *) mxGetData(prhs[8]));
+      b12::Flags flagsToSet = *((uint64_t *) mxGetData(prhs[9]));
+      if (nlhs > 0) {
+        // output insert(depth)
+        plhs[0] = mxCreateLogicalMatrix(1, mxGetN(prhs[6]));
+        bool * pr = (bool *) mxGetData(plhs[0]);
+        if (b12::ThrustSystem<b12::@thrustarch@>::Memory::isOnHost()) {
+          if (0) {
+          }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                               \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<real> points(                       \
+      (real *) mxGetData(prhs[6]),                                                          \
+      (real *) mxGetData(prhs[6]) + mxGetM(prhs[6]) * mxGetN(prhs[6]));                     \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+      insertByPoints(points, depth, flagsToUnset, flagsToSet, pr);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+          else {
+            mexErrMsgTxt("Insert: Invalid dimension, floating-point precision, or maximal possible depth.");
+          }
+        } else {
+          if (0) {
+          }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                               \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<real> points(                       \
+      (real *) mxGetData(prhs[6]),                                                          \
+      (real *) mxGetData(prhs[6]) + mxGetM(prhs[6]) * mxGetN(prhs[6]));                     \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<bool> res(mxGetN(prhs[6]));         \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+      insertByPoints(points, depth, flagsToUnset, flagsToSet, res.begin());                 \
+  thrust::copy(res.begin(), res.end(), pr);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+          else {
+            mexErrMsgTxt("Insert: Invalid dimension, floating-point precision, or maximal possible depth.");
+          }
+        }
+      } else {
+        if (0) {
+        }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                   \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<real> points(                           \
+      (real *) mxGetData(prhs[6]),                                                              \
+      (real *) mxGetData(prhs[6]) + mxGetM(prhs[6]) * mxGetN(prhs[6]));                         \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->     \
+      insertByPoints(points, depth, flagsToUnset, flagsToSet, thrust::make_discard_iterator());
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+        else {
+          mexErrMsgTxt("Insert: Invalid dimension, floating-point precision, or maximal possible depth.");
+        }
+      }
+    } else if (!strcmp("cell", method)) {
+      // get input variables
+      char gridType[255]; // do not change the name since it is used by preprocessor macros
+      mxGetString(prhs[6], gridType, sizeof(gridType) + 1);
+      uint64_t * gridParams = (uint64_t *) mxGetData(prhs[7]);
+      int nGridParams = mxGetNumberOfElements(prhs[7]);
+      char mapType[255]; // do not change the name since it is used by preprocessor macros
+      mxGetString(prhs[8], mapType, sizeof(mapType) + 1);
+      double * mapParams = mxGetPr(prhs[9]);
+      int nMapParams = mxGetNumberOfElements(prhs[9]);
+      b12::Depth depth_it = *((int64_t *) mxGetData(prhs[10]));
+      b12::Flags flagsToCheck = *((uint64_t *) mxGetData(prhs[11]));
+      b12::Depth depth = *((int64_t *) mxGetData(prhs[12]));
+      b12::Flags flagsToUnset = *((uint64_t *) mxGetData(prhs[13]));
+      b12::Flags flagsToSet = *((uint64_t *) mxGetData(prhs[14]));
+      // compute
+      if (nlhs > 0) {
+        // output insert(depth)
+        if (flagsToCheck == b12::Flag::NONE) {
+          if (depth_it == 0) {
+            if (b12::ThrustSystem<b12::@thrustarch@>::Memory::isOnHost()) {
+              if (0) {
+              }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverRoot(b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                   \
+                                    b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                     \
+  plhs[0] = mxCreateLogicalMatrix(1, iterPair.second - iterPair.first);                                          \
+  bool * pr = (bool *) mxGetData(plhs[0]);                                                                       \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                      \
+      insertByIterators(iterPair, depth, flagsToUnset, flagsToSet, pr);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+              else {
+                mexErrMsgTxt("Insert: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+              }
+            } else {
+              if (0) {
+              }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverRoot(b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                   \
+                                    b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                     \
+  plhs[0] = mxCreateLogicalMatrix(1, iterPair.second - iterPair.first);                                          \
+  bool * pr = (bool *) mxGetData(plhs[0]);                                                                       \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<bool> res(iterPair.second - iterPair.first);             \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                      \
+      insertByIterators(iterPair, depth, flagsToUnset, flagsToSet, res.begin());                                 \
+  thrust::copy(res.begin(), res.end(), pr);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+              else {
+                mexErrMsgTxt("Insert: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+              }
+            }
+          } else if (depth_it == b12::getLeafDepth()) {
+            if (b12::ThrustSystem<b12::@thrustarch@>::Memory::isOnHost()) {
+              if (0) {
+              }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverLeaves(b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                 \
+                                      b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                   \
+  plhs[0] = mxCreateLogicalMatrix(1, iterPair.second - iterPair.first);                                          \
+  bool * pr = (bool *) mxGetData(plhs[0]);                                                                       \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                      \
+      insertByIterators(iterPair, depth, flagsToUnset, flagsToSet, pr);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+              else {
+                mexErrMsgTxt("Insert: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+              }
+            } else {
+              if (0) {
+              }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverLeaves(b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                 \
+                                      b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                   \
+  plhs[0] = mxCreateLogicalMatrix(1, iterPair.second - iterPair.first);                                          \
+  bool * pr = (bool *) mxGetData(plhs[0]);                                                                       \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<bool> res(iterPair.second - iterPair.first);             \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                      \
+      insertByIterators(iterPair, depth, flagsToUnset, flagsToSet, res.begin());                                 \
+  thrust::copy(res.begin(), res.end(), pr);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+              else {
+                mexErrMsgTxt("Insert: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+              }
+            }
+          } else {
+            if (b12::ThrustSystem<b12::@thrustarch@>::Memory::isOnHost()) {
+              if (0) {
+              }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverDepth(depth_it,                                                                   \
+                                     b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                  \
+                                     b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                    \
+  plhs[0] = mxCreateLogicalMatrix(1, iterPair.second - iterPair.first);                                          \
+  bool * pr = (bool *) mxGetData(plhs[0]);                                                                       \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                      \
+      insertByIterators(iterPair, depth, flagsToUnset, flagsToSet, pr);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+              else {
+                mexErrMsgTxt("Insert: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+              }
+            } else {
+              if (0) {
+              }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverDepth(depth_it,                                                                   \
+                                     b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                  \
+                                     b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                    \
+  plhs[0] = mxCreateLogicalMatrix(1, iterPair.second - iterPair.first);                                          \
+  bool * pr = (bool *) mxGetData(plhs[0]);                                                                       \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<bool> res(iterPair.second - iterPair.first);             \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                      \
+      insertByIterators(iterPair, depth, flagsToUnset, flagsToSet, res.begin());                                 \
+  thrust::copy(res.begin(), res.end(), pr);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+              else {
+                mexErrMsgTxt("Insert: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+              }
+            }
+          }
+        } else {
+          if (b12::ThrustSystem<b12::@thrustarch@>::Memory::isOnHost()) {
+            if (0) {
+            }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairByFlags(depth_it,                                                                     \
+                                   flagsToCheck,                                                                 \
+                                   b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                    \
+                                   b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                      \
+  plhs[0] = mxCreateLogicalMatrix(1, iterPair.second - iterPair.first);                                          \
+  bool * pr = (bool *) mxGetData(plhs[0]);                                                                       \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                      \
+      insertByIterators(iterPair, depth, flagsToUnset, flagsToSet, pr);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+            else {
+              mexErrMsgTxt("Insert: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+            }
+          } else {
+            if (0) {
+            }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairByFlags(depth_it,                                                                     \
+                                   flagsToCheck,                                                                 \
+                                   b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                    \
+                                   b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                      \
+  plhs[0] = mxCreateLogicalMatrix(1, iterPair.second - iterPair.first);                                          \
+  bool * pr = (bool *) mxGetData(plhs[0]);                                                                       \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<bool> res(iterPair.second - iterPair.first);             \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                      \
+      insertByIterators(iterPair, depth, flagsToUnset, flagsToSet, res.begin());                                 \
+  thrust::copy(res.begin(), res.end(), pr);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+            else {
+              mexErrMsgTxt("Insert: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+            }
+          }
+        }
+      } else {
+        if (flagsToCheck == b12::Flag::NONE) {
+          if (depth_it == 0) {
+            if (0) {
+            }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverRoot(b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                   \
+                                    b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                     \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                      \
+      insertByIterators(iterPair, depth, flagsToUnset, flagsToSet, thrust::make_discard_iterator());
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+            else {
+              mexErrMsgTxt("Insert: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+            }
+          } else if (depth_it == b12::getLeafDepth()) {
+            if (0) {
+            }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverLeaves(b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                 \
+                                      b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                   \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                      \
+      insertByIterators(iterPair, depth, flagsToUnset, flagsToSet, thrust::make_discard_iterator());
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+            else {
+              mexErrMsgTxt("Insert: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+            }
+          } else {
+            if (0) {
+            }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverDepth(depth_it,                                                                   \
+                                     b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                  \
+                                     b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                    \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                      \
+      insertByIterators(iterPair, depth, flagsToUnset, flagsToSet, thrust::make_discard_iterator());
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+            else {
+              mexErrMsgTxt("Insert: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+            }
+          }
+        } else {
+          if (0) {
+          }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairByFlags(depth_it,                                                                     \
+                                   flagsToCheck,                                                                 \
+                                   b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                    \
+                                   b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                      \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                      \
+      insertByIterators(iterPair, depth, flagsToUnset, flagsToSet, thrust::make_discard_iterator());
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+          else {
+            mexErrMsgTxt("Insert: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+          }
+        }
+      }
+    } else {
+      mexErrMsgTxt("Insert: Invalid command string.");
+    }
+    return;
+  }
+  
+  // nHostBufferBytes
+  if (!strcmp("nHostBufferBytes", command)) {
+    plhs[0] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * pr = (uint64_t *) mxGetData(plhs[0]);
+    if (nrhs == 5) {
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth) \
+  pr[0] = convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1])->getNHostBufferBytes();
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("NHostBufferBytes: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    } else { // 6th argument is nHostBufferBytes to set
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                     \
+  pr[0] = convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1])-> \
+      setNHostBufferBytes(*((uint64_t *) mxGetData(prhs[5])));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("NHostBufferBytes: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    }
+    return;
+  }
+  
+  // radius
+  if (!strcmp("radius", command)) {
+    if (!strcmp("double", REAL)) {
+      plhs[0] = mxCreateDoubleMatrix(DIM, 1, mxREAL);
+    } else {
+      plhs[0] = mxCreateNumericMatrix(DIM, 1, mxSINGLE_CLASS, mxREAL);
+    }
+    if (nrhs == 5) {
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                                \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<real> res(                                           \
+      (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->getRadius()); \
+  thrust::copy(res.begin(), res.end(), (real *) mxGetData(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("Radius: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    } else { // 6th argument is radius vector to set
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                                    \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<real> res(                                               \
+      (real *) mxGetData(prhs[5]),                                                                               \
+      (real *) mxGetData(prhs[5]) + dim);                                                                        \
+  res = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->setRadius(res); \
+  thrust::copy(res.begin(), res.end(), (real *) mxGetData(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("Radius: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    }
+    return;
+  }
+  
+  // remove
+  if (!strcmp("remove", command)) {
+    // Get depth from argument
+    b12::Flags flags = *((uint64_t *) mxGetData(prhs[5]));
+    // output remove(flags)
+    plhs[0] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * pr = (uint64_t *) mxGetData(plhs[0]);
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth) \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->remove(flags);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("Remove: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  // reserve
+  if (!strcmp("reserve", command)) {
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                               \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+      reserve(*((uint64_t *) mxGetData(prhs[5])));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("Reserve: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  // save
+  if (!strcmp("save", command)) {
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                               \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+      save(mxArrayToString(prhs[5]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("Save: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  // saveForGaio
+  if (!strcmp("saveForGaio", command)) {
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                               \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+      saveForGaio(mxArrayToString(prhs[5]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("SaveForGaio: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  // sdScheme
+  if (!strcmp("sdScheme", command)) {
+    if (nrhs == 5) {
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                                  \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<b12::Dimension> res(                                   \
+      (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->getSdScheme()); \
+  thrust::transform(typename b12::ThrustSystem<b12::@thrustarch@>::execution_policy(),                         \
+                    res.begin(), res.end(),                                                                    \
+                    res.begin(),                                                                               \
+                    thrust::placeholders::_1 + b12::Dimension(1));                                             \
+  typename b12::ThrustSystem<b12::HOST>::Vector<b12::Dimension> temp(res);                                     \
+  plhs[0] = mxCreateNumericMatrix(temp.size(), 1, mxUINT64_CLASS, mxREAL);                                     \
+  thrust::copy(temp.begin(), temp.end(), (uint64_t *) mxGetData(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("SdScheme: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    } else { // 6th argument is sd vector to set
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                                      \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<b12::Dimension> res(                                       \
+      (uint64_t *) mxGetData(prhs[5]),                                                                             \
+      (uint64_t *) mxGetData(prhs[5]) + mxGetM(prhs[5]) * mxGetN(prhs[5]));                                        \
+  thrust::transform(typename b12::ThrustSystem<b12::@thrustarch@>::execution_policy(),                             \
+                    res.begin(), res.end(),                                                                        \
+                    res.begin(),                                                                                   \
+                    thrust::placeholders::_1 - b12::Dimension(1));                                                 \
+  res = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->setSdScheme(res); \
+  thrust::transform(typename b12::ThrustSystem<b12::@thrustarch@>::execution_policy(),                             \
+                    res.begin(), res.end(),                                                                        \
+                    res.begin(),                                                                                   \
+                    thrust::placeholders::_1 + b12::Dimension(1));                                                 \
+  typename b12::ThrustSystem<b12::HOST>::Vector<b12::Dimension> temp(res);                                         \
+  plhs[0] = mxCreateNumericMatrix(temp.size(), 1, mxUINT64_CLASS, mxREAL);                                         \
+  thrust::copy(temp.begin(), temp.end(), (uint64_t *) mxGetData(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("SdScheme: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    }
+    return;
+  }
+  
+  // search
+  if (!strcmp("search", command)) {
+    // get command string of setFlags
+    char method[255];
+    mxGetString(prhs[5], method, sizeof(method) + 1);
+    if (!strcmp("points", method)) {
+      // get input variables
+      b12::NrPoints nPoints = mxGetN(prhs[6]);
+      b12::Depth depth = *((int64_t *) mxGetData(prhs[7]));
+      // compute
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                   \
+  typename b12::ThrustSystem<b12::HOST>::Vector<b12::NrBoxes> temp;                             \
+  {                                                                                             \
+    typename b12::ThrustSystem<b12::@thrustarch@>::Vector<b12::NrBoxes> res(mxGetN(prhs[6]));   \
+    {                                                                                           \
+      typename b12::ThrustSystem<b12::@thrustarch@>::Vector<real> points(                       \
+          (real *) mxGetData(prhs[6]),                                                          \
+          (real *) mxGetData(prhs[6]) + mxGetM(prhs[6]) * mxGetN(prhs[6]));                     \
+      (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+          searchByPoints(points, depth, res.begin());                                           \
+    }                                                                                           \
+    thrust::transform(typename b12::ThrustSystem<b12::@thrustarch@>::execution_policy(),        \
+                      res.begin(), res.end(),                                                   \
+                      res.begin(),                                                              \
+                      thrust::placeholders::_1 + b12::NrBoxes(1));                              \
+    temp.assign(res.begin(), res.end());                                                        \
+  }                                                                                             \
+  plhs[0] = mxCreateNumericMatrix(1, mxGetN(prhs[6]), mxUINT64_CLASS, mxREAL);                  \
+  thrust::copy(temp.begin(), temp.end(), (uint64_t *) mxGetData(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("Search: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    } else if (!strcmp("cell", method)) {
+      // get input variables
+      char gridType[255]; // do not change the name since it is used by preprocessor macros
+      mxGetString(prhs[6], gridType, sizeof(gridType) + 1);
+      uint64_t * gridParams = (uint64_t *) mxGetData(prhs[7]);
+      int nGridParams = mxGetNumberOfElements(prhs[7]);
+      char mapType[255]; // do not change the name since it is used by preprocessor macros
+      mxGetString(prhs[8], mapType, sizeof(mapType) + 1);
+      double * mapParams = mxGetPr(prhs[9]);
+      int nMapParams = mxGetNumberOfElements(prhs[9]);
+      b12::Depth depth_it = *((int64_t *) mxGetData(prhs[10]));
+      b12::Flags flagsToCheck = *((uint64_t *) mxGetData(prhs[11]));
+      b12::Depth depth = *((int64_t *) mxGetData(prhs[12]));
+      // compute
+      if (flagsToCheck == b12::Flag::NONE) {
+        if (depth_it == 0) {
+          if (0) {
+          }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params)\
+  typename b12::ThrustSystem<b12::HOST>::Vector<b12::NrBoxes> temp;                                             \
+  {                                                                                                             \
+    auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->   \
+        makePointIteratorPairOverRoot(b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                \
+                                      b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                  \
+    typename b12::ThrustSystem<b12::@thrustarch@>::Vector<b12::NrBoxes> res(iterPair.second - iterPair.first);  \
+    (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                   \
+        searchByIterators(iterPair, depth, res.begin());                                                        \
+    thrust::transform(typename b12::ThrustSystem<b12::@thrustarch@>::execution_policy(),                        \
+                      res.begin(), res.end(),                                                                   \
+                      res.begin(),                                                                              \
+                      thrust::placeholders::_1 + b12::NrBoxes(1));                                              \
+    temp.assign(res.begin(), res.end());                                                                        \
+  }                                                                                                             \
+  plhs[0] = mxCreateNumericMatrix(1, temp.size(), mxUINT64_CLASS, mxREAL);                                      \
+  thrust::copy(temp.begin(), temp.end(), (uint64_t *) mxGetData(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+          else {
+            mexErrMsgTxt("Search: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+          }
+        } else if (depth_it == b12::getLeafDepth()) {
+          if (0) {
+          }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  typename b12::ThrustSystem<b12::HOST>::Vector<b12::NrBoxes> temp;                                              \
+  {                                                                                                              \
+    auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->    \
+        makePointIteratorPairOverLeaves(b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),               \
+                                        b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                 \
+    typename b12::ThrustSystem<b12::@thrustarch@>::Vector<b12::NrBoxes> res(iterPair.second - iterPair.first);   \
+    (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                    \
+        searchByIterators(iterPair, depth, res.begin());                                                         \
+    thrust::transform(typename b12::ThrustSystem<b12::@thrustarch@>::execution_policy(),                         \
+                      res.begin(), res.end(),                                                                    \
+                      res.begin(),                                                                               \
+                      thrust::placeholders::_1 + b12::NrBoxes(1));                                               \
+    temp.assign(res.begin(), res.end());                                                                         \
+  }                                                                                                              \
+  plhs[0] = mxCreateNumericMatrix(1, temp.size(), mxUINT64_CLASS, mxREAL);                                       \
+  thrust::copy(temp.begin(), temp.end(), (uint64_t *) mxGetData(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+          else {
+            mexErrMsgTxt("Search: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+          }
+        } else {
+          if (0) {
+          }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  typename b12::ThrustSystem<b12::HOST>::Vector<b12::NrBoxes> temp;                                              \
+  {                                                                                                              \
+    auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->    \
+        makePointIteratorPairOverDepth(depth_it,                                                                 \
+                                       b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                \
+                                       b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                  \
+    typename b12::ThrustSystem<b12::@thrustarch@>::Vector<b12::NrBoxes> res(iterPair.second - iterPair.first);   \
+    (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                    \
+        searchByIterators(iterPair, depth, res.begin());                                                         \
+    thrust::transform(typename b12::ThrustSystem<b12::@thrustarch@>::execution_policy(),                         \
+                      res.begin(), res.end(),                                                                    \
+                      res.begin(),                                                                               \
+                      thrust::placeholders::_1 + b12::NrBoxes(1));                                               \
+    temp.assign(res.begin(), res.end());                                                                         \
+  }                                                                                                              \
+  plhs[0] = mxCreateNumericMatrix(1, temp.size(), mxUINT64_CLASS, mxREAL);                                       \
+  thrust::copy(temp.begin(), temp.end(), (uint64_t *) mxGetData(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+          else {
+            mexErrMsgTxt("Search: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+          }
+        }
+      } else {
+        if (0) {
+        }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  typename b12::ThrustSystem<b12::HOST>::Vector<b12::NrBoxes> temp;                                              \
+  {                                                                                                              \
+    auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->    \
+        makePointIteratorPairByFlags(depth_it,                                                                   \
+                                     flagsToCheck,                                                               \
+                                     b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                  \
+                                     b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                    \
+    typename b12::ThrustSystem<b12::@thrustarch@>::Vector<b12::NrBoxes> res(iterPair.second - iterPair.first);   \
+    (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                    \
+        searchByIterators(iterPair, depth, res.begin());                                                         \
+    thrust::transform(typename b12::ThrustSystem<b12::@thrustarch@>::execution_policy(),                         \
+                      res.begin(), res.end(),                                                                    \
+                      res.begin(),                                                                               \
+                      thrust::placeholders::_1 + b12::NrBoxes(1));                                               \
+    temp.assign(res.begin(), res.end());                                                                         \
+  }                                                                                                              \
+  plhs[0] = mxCreateNumericMatrix(1, temp.size(), mxUINT64_CLASS, mxREAL);                                       \
+  thrust::copy(temp.begin(), temp.end(), (uint64_t *) mxGetData(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+        else {
+          mexErrMsgTxt("Search: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+        }
+      }
+    } else {
+      mexErrMsgTxt("Search: Invalid command string.");
+    }
+    return;
+  }
+  
+  // setFlags
+  if (!strcmp("setFlags", command)) {
+    // get command string of setFlags
+    char method[255];
+    mxGetString(prhs[5], method, sizeof(method) + 1);
+    // output setFlags(...)
+    plhs[0] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * pr = (uint64_t *) mxGetData(plhs[0]);
+    if (!strcmp("all", method)) {
+      // get input variables
+      b12::Flags flags = *((uint64_t *) mxGetData(prhs[6]));
+      b12::Depth depth = *((int64_t *) mxGetData(prhs[7]));
+      // compute
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                       \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+      setFlags(flags, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("SetFlags: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    } else if (!strcmp("logical", method)) {
+      // get input variables
+      typename b12::ThrustSystem<b12::@thrustarch@>::Vector<bool> stencil(
+          (bool *) mxGetData(prhs[6]),
+          (bool *) mxGetData(prhs[6]) + mxGetM(prhs[6]) * mxGetN(prhs[6]));
+      b12::Flags flags = *((uint64_t *) mxGetData(prhs[7]));
+      b12::Depth depth = *((int64_t *) mxGetData(prhs[8]));
+      // compute
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                       \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+      setFlagsByStencil(stencil.begin(), flags, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("SetFlags: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    } else if (!strcmp("points", method)) {
+      // get input variables
+      b12::Flags flags = *((uint64_t *) mxGetData(prhs[7]));
+      b12::Depth depth = *((int64_t *) mxGetData(prhs[8]));
+      // compute
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                       \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<real> points(                               \
+      (real *) mxGetData(prhs[6]),                                                                  \
+      (real *) mxGetData(prhs[6]) + mxGetM(prhs[6]) * mxGetN(prhs[6]));                             \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+      setFlagsByPoints(points, flags, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("SetFlags: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    } else if (!strcmp("cell", method)) {
+      // get input variables
+      char gridType[255]; // do not change the name since it is used by preprocessor macros
+      mxGetString(prhs[6], gridType, sizeof(gridType) + 1);
+      uint64_t * gridParams = (uint64_t *) mxGetData(prhs[7]);
+      int nGridParams = mxGetNumberOfElements(prhs[7]);
+      char mapType[255]; // do not change the name since it is used by preprocessor macros
+      mxGetString(prhs[8], mapType, sizeof(mapType) + 1);
+      double * mapParams = mxGetPr(prhs[9]);
+      int nMapParams = mxGetNumberOfElements(prhs[9]);
+      b12::Depth depth_it = *((int64_t *) mxGetData(prhs[10]));
+      b12::Flags flagsToCheck = *((uint64_t *) mxGetData(prhs[11]));
+      b12::Flags flags = *((uint64_t *) mxGetData(prhs[12]));
+      b12::Depth depth = *((int64_t *) mxGetData(prhs[13]));
+      // compute
+      if (flagsToCheck == b12::Flag::NONE) {
+        if (depth_it == 0) {
+          if (0) {
+          }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverRoot(b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                   \
+                                    b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                     \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->              \
+      setFlagsByIterators(iterPair, flags, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+          else {
+            mexErrMsgTxt("SetFlags: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+          }
+        } else if (depth_it == b12::getLeafDepth()) {
+          if (0) {
+          }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverLeaves(b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                 \
+                                      b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                   \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->              \
+      setFlagsByIterators(iterPair, flags, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+          else {
+            mexErrMsgTxt("SetFlags: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+          }
+        } else {
+          if (0) {
+          }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverDepth(depth_it,                                                                   \
+                                     b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                  \
+                                     b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                    \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->              \
+      setFlagsByIterators(iterPair, flags, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+          else {
+            mexErrMsgTxt("SetFlags: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+          }
+        }
+      } else {
+        if (0) {
+        }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairByFlags(depth_it,                                                                     \
+                                   flagsToCheck,                                                                 \
+                                   b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                    \
+                                   b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                      \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->              \
+      setFlagsByIterators(iterPair, flags, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+        else {
+          mexErrMsgTxt("SetFlags: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+        }
+      }
+    } else {
+      mexErrMsgTxt("SetFlags: Invalid command string.");
+    }
+    return;
+  }
+  
+  // shrinkToFit
+  if (!strcmp("shrinkToFit", command)) {
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth) \
+  (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->shrinkToFit();
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("ShrinkToFit: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  // subdivide
+  if (!strcmp("subdivide", command)) {
+    // Get input arguments
+    b12::Flags flags = *((uint64_t *) mxGetData(prhs[5]));
+    // output subdivide(flags)
+    plhs[0] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * pr = (uint64_t *) mxGetData(plhs[0]);
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth) \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->subdivide(flags);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("Subdivide: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  // transitionMatrix
+  if (!strcmp("transitionMatrix", command)) {
+    // get input variables
+    char gridType[255]; // do not change the name since it is used by preprocessor macros
+    mxGetString(prhs[5], gridType, sizeof(gridType) + 1);
+    uint64_t * gridParams = (uint64_t *) mxGetData(prhs[6]);
+    int nGridParams = mxGetNumberOfElements(prhs[6]);
+    char mapType[255]; // do not change the name since it is used by preprocessor macros
+    mxGetString(prhs[7], mapType, sizeof(mapType) + 1);
+    double * mapParams = mxGetPr(prhs[8]);
+    int nMapParams = mxGetNumberOfElements(prhs[8]);
+    b12::Depth depth_it = *((int64_t *) mxGetData(prhs[9]));
+    b12::Flags flagsToCheck = *((uint64_t *) mxGetData(prhs[10]));
+    bool useAbsoluteValues = *((bool *) mxGetData(prhs[11]));
+    bool useInvalidNrBoxes = *((bool *) mxGetData(prhs[12]));
+    // compute
+    if (depth_it == 0) {
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  b12::CooMatrix<b12::@thrustarch@, double> res(                                                                 \
+      (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                  \
+          transitionMatrixForRoot<double>(b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),             \
+                                          b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)),                \
+                                          useAbsoluteValues, false, useInvalidNrBoxes));                         \
+  b12::compressIndexVector<b12::@thrustarch@>(res.columnIndices_, res.nColumns_);                                \
+  plhs[0] = mxCreateSparse(res.nRows_, res.nColumns_, res.values_.size(), mxREAL);                               \
+  thrust::copy(res.rowIndices_.begin(), res.rowIndices_.end(), mxGetIr(plhs[0]));                                \
+  thrust::copy(res.columnIndices_.begin(), res.columnIndices_.end(), mxGetJc(plhs[0]));                          \
+  thrust::copy(res.values_.begin(), res.values_.end(), mxGetPr(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+      else {
+        mexErrMsgTxt("TransitionMatrix: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+      }
+    } else if (depth_it == b12::getLeafDepth()) {
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  b12::CooMatrix<b12::@thrustarch@, double> res(                                                                 \
+      (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                  \
+          transitionMatrixForLeaves<double>(b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),           \
+                                            b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)),              \
+                                            useAbsoluteValues, false, useInvalidNrBoxes));                       \
+  b12::compressIndexVector<b12::@thrustarch@>(res.columnIndices_, res.nColumns_);                                \
+  plhs[0] = mxCreateSparse(res.nRows_, res.nColumns_, res.values_.size(), mxREAL);                               \
+  thrust::copy(res.rowIndices_.begin(), res.rowIndices_.end(), mxGetIr(plhs[0]));                                \
+  thrust::copy(res.columnIndices_.begin(), res.columnIndices_.end(), mxGetJc(plhs[0]));                          \
+  thrust::copy(res.values_.begin(), res.values_.end(), mxGetPr(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+      else {
+        mexErrMsgTxt("TransitionMatrix: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+      }
+    } else {
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  b12::CooMatrix<b12::@thrustarch@, double> res(                                                                 \
+      (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->                  \
+          transitionMatrixForDepth<double>(depth_it,                                                             \
+                                           b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),            \
+                                           b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)),               \
+                                           useAbsoluteValues, false, useInvalidNrBoxes));                        \
+  b12::compressIndexVector<b12::@thrustarch@>(res.columnIndices_, res.nColumns_);                                \
+  plhs[0] = mxCreateSparse(res.nRows_, res.nColumns_, res.values_.size(), mxREAL);                               \
+  thrust::copy(res.rowIndices_.begin(), res.rowIndices_.end(), mxGetIr(plhs[0]));                                \
+  thrust::copy(res.columnIndices_.begin(), res.columnIndices_.end(), mxGetJc(plhs[0]));                          \
+  thrust::copy(res.values_.begin(), res.values_.end(), mxGetPr(plhs[0]));
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+      else {
+        mexErrMsgTxt("TransitionMatrix: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+      }
+    }
+    return;
+  }
+  
+  // unsetFlags
+  if (!strcmp("unsetFlags", command)) {
+    // get command string of unsetFlags
+    char method[255];
+    mxGetString(prhs[5], method, sizeof(method) + 1);
+    // output unsetFlags(...)
+    plhs[0] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * pr = (uint64_t *) mxGetData(plhs[0]);
+    if (!strcmp("all", method)) {
+      // get input variables
+      b12::Flags flags = *((uint64_t *) mxGetData(prhs[6]));
+      b12::Depth depth = *((int64_t *) mxGetData(prhs[7]));
+      // compute
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                       \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+      unsetFlags(flags, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("UnsetFlags: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    } else if (!strcmp("logical", method)) {
+      // get input variables
+      typename b12::ThrustSystem<b12::@thrustarch@>::Vector<bool> stencil(
+          (bool *) mxGetData(prhs[6]),
+          (bool *) mxGetData(prhs[6]) + mxGetM(prhs[6]) * mxGetN(prhs[6]));
+      b12::Flags flags = *((uint64_t *) mxGetData(prhs[7]));
+      b12::Depth depth = *((int64_t *) mxGetData(prhs[8]));
+      // compute
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                       \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+      unsetFlagsByStencil(stencil.begin(), flags, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("UnsetFlags: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    } else if (!strcmp("points", method)) {
+      // get input variables
+      b12::Flags flags = *((uint64_t *) mxGetData(prhs[7]));
+      b12::Depth depth = *((int64_t *) mxGetData(prhs[8]));
+      // compute
+      if (0) {
+      }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth)                                       \
+  typename b12::ThrustSystem<b12::@thrustarch@>::Vector<real> points(                               \
+      (real *) mxGetData(prhs[6]),                                                                  \
+      (real *) mxGetData(prhs[6]) + mxGetM(prhs[6]) * mxGetN(prhs[6]));                             \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))-> \
+      unsetFlagsByPoints(points, flags, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+      else {
+        mexErrMsgTxt("UnsetFlags: Invalid dimension, floating-point precision, or maximal possible depth.");
+      }
+    } else if (!strcmp("cell", method)) {
+      // get input variables
+      char gridType[255]; // do not change the name since it is used by preprocessor macros
+      mxGetString(prhs[6], gridType, sizeof(gridType) + 1);
+      uint64_t * gridParams = (uint64_t *) mxGetData(prhs[7]);
+      int nGridParams = mxGetNumberOfElements(prhs[7]);
+      char mapType[255]; // do not change the name since it is used by preprocessor macros
+      mxGetString(prhs[8], mapType, sizeof(mapType) + 1);
+      double * mapParams = mxGetPr(prhs[9]);
+      int nMapParams = mxGetNumberOfElements(prhs[9]);
+      b12::Depth depth_it = *((int64_t *) mxGetData(prhs[10]));
+      b12::Flags flagsToCheck = *((uint64_t *) mxGetData(prhs[11]));
+      b12::Flags flags = *((uint64_t *) mxGetData(prhs[12]));
+      b12::Depth depth = *((int64_t *) mxGetData(prhs[13]));
+      // compute
+      if (flagsToCheck == b12::Flag::NONE) {
+        if (depth_it == 0) {
+          if (0) {
+          }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverRoot(b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                   \
+                                    b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                     \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->              \
+      unsetFlagsByIterators(iterPair, flags, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+          else {
+            mexErrMsgTxt("UnsetFlags: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+          }
+        } else if (depth_it == b12::getLeafDepth()) {
+          if (0) {
+          }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverLeaves(b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                 \
+                                      b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                   \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->              \
+      unsetFlagsByIterators(iterPair, flags, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+          else {
+            mexErrMsgTxt("UnsetFlags: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+          }
+        } else {
+          if (0) {
+          }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairOverDepth(depth_it,                                                                   \
+                                     b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                  \
+                                     b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                    \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->              \
+      unsetFlagsByIterators(iterPair, flags, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+          else {
+            mexErrMsgTxt("UnsetFlags: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+          }
+        }
+      } else {
+        if (0) {
+        }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO(dim, real, maxDepth, grid, n_grid_params, map, n_map_params) \
+  auto iterPair = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->      \
+      makePointIteratorPairByFlags(depth_it,                                                                     \
+                                   flagsToCheck,                                                                 \
+                                   b12::grid<dim, real>(N_PARAMS(n_grid_params, gridParams)),                    \
+                                   b12::map<dim, real>(N_PARAMS(n_map_params, mapParams)));                      \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->              \
+      unsetFlagsByIterators(iterPair, flags, depth);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_GRIDS_MAPS_MACRO
+        else {
+          mexErrMsgTxt("UnsetFlags: Invalid GridFunctor, MapFunctor, dimension, floating-point precision, or maximal possible depth.");
+        }
+      }
+    } else {
+      mexErrMsgTxt("UnsetFlags: Invalid command string.");
+    }
+    return;
+  }
+  
+  // unsubdivide
+  if (!strcmp("unsubdivide", command)) {
+    // Get input arguments
+    b12::Flags flags = *((uint64_t *) mxGetData(prhs[5]));
+    // output unsubdivide(flags)
+    plhs[0] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    uint64_t * pr = (uint64_t *) mxGetData(plhs[0]);
+    if (0) {
+    }
+#define LOCAL_DIMS_REALS_MAXDEPTHS_MACRO(dim, real, maxDepth) \
+  pr[0] = (convertMat2Ptr<b12::ImplicitBoxTree<b12::@thrustarch@, dim, real, maxDepth>>(prhs[1]))->unsubdivide(flags);
+ALL_ELSE_IF_COMBINATIONS_OF_DIMS_REALS_MAXDEPTHS
+#undef LOCAL_DIMS_REALS_MAXDEPTHS_MACRO
+    else {
+      mexErrMsgTxt("Unsubdivide: Invalid dimension, floating-point precision, or maximal possible depth.");
+    }
+    return;
+  }
+  
+  // Got here, so command not recognized
+  mexErrMsgTxt("Command not recognized.");
+}

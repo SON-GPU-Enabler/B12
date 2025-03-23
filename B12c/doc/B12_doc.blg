@@ -1,0 +1,87 @@
+This is BibTeX, Version 0.99d (TeX Live 2013/Debian)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: B12_doc.aux
+The style file: plain.bst
+Database file #1: papers.bib.bib
+You're missing a field name---line 2 of file papers.bib.bib
+ : 
+ : %  author = {Dellnitz, Michael and Hohmann, Andreas},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 28 of file papers.bib.bib
+ : 
+ : %  author = {Ruelle, David},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 53 of file papers.bib.bib
+ : 
+ : %  author = {Ruelle, David},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 68 of file papers.bib.bib
+ : 
+ : %  title = {An Introduction to Ergodic Theory},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 86 of file papers.bib.bib
+ : 
+ : %  title = "The dimension of chaotic attractors ",
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 110 of file papers.bib.bib
+ : 
+ : %  author = {James Theiler},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 136 of file papers.bib.bib
+ : 
+ : %  author = {Siegmund, S. and Taraba, P.},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 160 of file papers.bib.bib
+ : 
+ : %  author = {Tarjan, R.},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You've used 2 entries,
+            2118 wiz_defined-function locations,
+            511 strings with 4407 characters,
+and the built_in function-call counts, 803 in all, are:
+= -- 81
+> -- 31
+< -- 1
++ -- 13
+- -- 10
+* -- 53
+:= -- 130
+add.period$ -- 7
+call.type$ -- 2
+change.case$ -- 11
+chr.to.int$ -- 0
+cite$ -- 2
+duplicate$ -- 35
+empty$ -- 65
+format.name$ -- 10
+if$ -- 175
+int.to.chr$ -- 0
+int.to.str$ -- 2
+missing$ -- 2
+newline$ -- 13
+num.names$ -- 4
+pop$ -- 12
+preamble$ -- 1
+purify$ -- 9
+quote$ -- 0
+skip$ -- 26
+stack$ -- 0
+substring$ -- 52
+swap$ -- 11
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 8
+warning$ -- 0
+while$ -- 8
+width$ -- 3
+write$ -- 25
+(There were 8 error messages)

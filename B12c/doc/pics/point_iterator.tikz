@@ -1,0 +1,39 @@
+{\tiny
+\begin{tikzpicture}
+  \newcounter{grid}
+  \setcounter{grid}{0}
+  
+  \draw[fill=blue] (0.5,0.5) rectangle (4.5,4.5) {};
+  \draw[fill=blue!66!orange] (0.5,4.5) rectangle (2.5,8.5) {};
+  \draw[fill=blue!33!orange] (6.5,2.5) rectangle (8.5,4.5) {};
+  \draw[fill=orange] (4.5,4.5) rectangle (8.5,8.5) {};
+  
+  \foreach \y in {1,2,3,4} {
+    \foreach \x in {1,2,3,4} {
+      \node at (\x,\y) [circle,white,fill=black] { \thegrid };
+      \addtocounter{grid}{1}
+    }
+  }
+  
+  \foreach \y in {5,6,7,8} {
+    \foreach \x in {0.75,1.25,1.75,2.25} {
+      \node at (\x,\y) [circle,white,fill=black] { \thegrid };
+      \addtocounter{grid}{1}
+    }
+  }
+  
+  \foreach \y in {2.75,3.25,3.75,4.25} {
+    \foreach \x in {6.75,7.25,7.75,8.25} {
+      \node at (\x,\y) [circle,white,fill=black] { \thegrid };
+      \addtocounter{grid}{1}
+    }
+  }
+  
+  \foreach \y in {5,6,7,8} {
+    \foreach \x in {5,6,7,8} {
+      \node at (\x,\y) [circle,white,fill=black] { \thegrid };
+      \addtocounter{grid}{1}
+    }
+  }
+\end{tikzpicture}
+}

@@ -1,0 +1,60 @@
+# This configuration file is shipped with the great FEM-Toolbox @B12Version@.
+# It simplifies the configure of different amdis-versions.
+#
+# In order to compile an amdis-project and link against the amdis
+# (and subsequent) libraries simply add '@B12Version@' to the target_link_libraries
+# of your executable target. All include-paths and additional libraries are
+# automatically added.
+#
+# For a fast start, you use this package in the following way
+# simply look for it, possibly set the @B12Version@ directory
+#
+#   find_package(@B12Version@ REQUIRED)
+#   add_executable(yourTarget <yourSources>)
+#   target_link_libraries(yourTarget ${@B12Version@_LIBRARIES})
+#
+
+
+find_package(CUDA REQUIRED 7.0)
+find_package(OpenMP)
+
+
+set(CMAKE_C_FLAGS @CMAKE_C_FLAGS@)
+set(CMAKE_CXX_FLAGS @CMAKE_CXX_FLAGS@)
+
+set(CUDA_NVCC_FLAGS @CUDA_NVCC_FLAGS@)
+
+
+if (${CMAKE_VERSION} VERSION_LESS "3.5")
+  message(FATAL_ERROR "The Configuration file was created for CMake version >= 3.5")
+endif ()
+
+set(libList @libList@)
+set(libListFullName "")
+
+foreach(temp ${libList})
+  find_library("${temp}_fullName" ${temp} PATHS ${@B12Version@_DIR}/lib NO_DEFAULT_PATH)
+  list(APPEND libListFullName "${${temp}_fullName}")
+endforeach(temp)
+
+add_library(@B12Version@_shared INTERFACE)
+add_library(@B12Version@ ALIAS @B12Version@_shared)
+
+target_link_libraries(@B12Version@_shared INTERFACE ${libListFullName})
+
+set(@B12Version@_LIBRARIES @B12Version@)
+
+# set(CMAKE_CXX_STANDARD 11)
+# set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+
+# try to detect the @B12Version@ include directory
+# -------------------------------------------
+find_file(_@B12Version@_H ImplicitBoxTree.h PATHS ${@B12Version@_DIR}/include/)
+if (_@B12Version@_H)
+  get_filename_component(@B12Version@_INCLUDE_DIRS ${_@B12Version@_H} PATH CACHE)
+else ()
+  message(SEND_ERROR "Could not detect the @B12Version@ include directory. Please set the variable @B12Version@_INCLUDE_DIRS to the directory containing the @B12Version@ headers.")
+endif ()
+unset(_@B12Version@_H CACHE)
+

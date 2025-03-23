@@ -1,0 +1,281 @@
+
+#include "Grids.h"
+#include "Map_@map@.h"
+
+#define INCLUDE_IMPLICIT_BOX_TREE_MEMBER_DEFINITIONS
+#include "ImplicitBoxTree.h"
+#undef INCLUDE_IMPLICIT_BOX_TREE_MEMBER_DEFINITIONS
+
+
+namespace b12 {
+
+template CooMatrix<@thrustarch@, NrPoints>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrixForRoot<NrPoints>(@grid@<@dim@, @real@>,
+                                                                                            @map@<@dim@, @real@>,
+                                                                                            bool, bool, bool);
+template CooMatrix<@thrustarch@, NrPoints>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrixForLeaves<NrPoints>(@grid@<@dim@, @real@>,
+                                                                                              @map@<@dim@, @real@>,
+                                                                                              bool, bool, bool);
+template CooMatrix<@thrustarch@, NrPoints>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrixForDepth<NrPoints>(Depth,
+                                                                                             @grid@<@dim@, @real@>,
+                                                                                             @map@<@dim@, @real@>,
+                                                                                             bool, bool, bool);
+template CooMatrix<@thrustarch@, float>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrixForRoot<float>(@grid@<@dim@, @real@>,
+                                                                                         @map@<@dim@, @real@>,
+                                                                                         bool, bool, bool);
+template CooMatrix<@thrustarch@, float>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrixForLeaves<float>(@grid@<@dim@, @real@>,
+                                                                                           @map@<@dim@, @real@>,
+                                                                                           bool, bool, bool);
+template CooMatrix<@thrustarch@, float>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrixForDepth<float>(Depth,
+                                                                                          @grid@<@dim@, @real@>,
+                                                                                          @map@<@dim@, @real@>,
+                                                                                          bool, bool, bool);
+template CooMatrix<@thrustarch@, double>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrixForRoot<double>(@grid@<@dim@, @real@>,
+                                                                                          @map@<@dim@, @real@>,
+                                                                                          bool, bool, bool);
+template CooMatrix<@thrustarch@, double>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrixForLeaves<double>(@grid@<@dim@, @real@>,
+                                                                                            @map@<@dim@, @real@>,
+                                                                                            bool, bool, bool);
+template CooMatrix<@thrustarch@, double>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrixForDepth<double>(Depth,
+                                                                                           @grid@<@dim@, @real@>,
+                                                                                           @map@<@dim@, @real@>,
+                                                                                           bool, bool, bool);
+
+#define IteratorType                                                                           \
+thrust::transform_iterator<                                                                    \
+    GridPointsFunctor<@dim@, @real@, @maxDepth@, @grid@<@dim@, @real@>, @map@<@dim@, @real@>>, \
+      thrust::zip_iterator<                                                                    \
+          thrust::tuple<                                                                       \
+              thrust::counting_iterator<NrPoints>,                                             \
+              thrust::constant_iterator<Box<@maxDepth@>>>>>
+
+template thrust::pair<IteratorType, IteratorType>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::makePointIteratorPairOverRoot(@grid@<@dim@, @real@>,
+                                                                                        @map@<@dim@, @real@>,
+                                                                                        Flags);
+
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::changeFlagsByIterators(
+    thrust::pair<IteratorType, IteratorType>, Flags, Flags, Depth);
+
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::insertByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, Flags, Flags, bool *);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::insertByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, Flags, Flags, ThrustSystem<@thrustarch@>::Vector<bool>::iterator);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::insertByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, Flags, Flags, thrust::discard_iterator<>);
+template typename ThrustSystem<@thrustarch@>::Vector<bool>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::insertByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, Flags, Flags);
+
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::searchByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, NrBoxes *);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::searchByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, ThrustSystem<@thrustarch@>::Vector<NrBoxes>::iterator);
+template typename ThrustSystem<@thrustarch@>::Vector<NrBoxes>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::searchByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth);
+
+template typename ThrustSystem<@thrustarch@>::Vector<NrBoxes>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::searchCompacted(
+    thrust::pair<IteratorType, IteratorType>, Depth);
+
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::setFlagsByIterators(
+    thrust::pair<IteratorType, IteratorType>, Flags, Depth);
+
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrix(
+    thrust::pair<IteratorType, IteratorType>,
+    Depth, NrPoints, bool, bool, bool,
+    CooMatrix<@thrustarch@, NrPoints>&);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrix(
+    thrust::pair<IteratorType, IteratorType>,
+    Depth, NrPoints, bool, bool, bool,
+    CooMatrix<@thrustarch@, float>&);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrix(
+    thrust::pair<IteratorType, IteratorType>,
+    Depth, NrPoints, bool, bool, bool,
+    CooMatrix<@thrustarch@, double>&);
+
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::unsetFlagsByIterators(
+    thrust::pair<IteratorType, IteratorType>, Flags, Depth);
+
+#undef IteratorType
+
+
+#define IteratorType                                                                           \
+thrust::transform_iterator<                                                                    \
+    GridPointsFunctor<@dim@, @real@, @maxDepth@, @grid@<@dim@, @real@>, @map@<@dim@, @real@>>, \
+    thrust::zip_iterator<                                                                      \
+        thrust::tuple<                                                                         \
+            thrust::counting_iterator<NrPoints>,                                               \
+            thrust::permutation_iterator<                                                      \
+                typename ThrustSystem<@thrustarch@>::ConstBoxIterator<@maxDepth@>,             \
+                thrust::transform_iterator<IDivideByFunctor, thrust::counting_iterator<NrPoints>>>>>>
+
+template thrust::pair<IteratorType, IteratorType>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::makePointIteratorPairOverLeaves(@grid@<@dim@, @real@>,
+                                                                                          @map@<@dim@, @real@>,
+                                                                                          Flags);
+
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::changeFlagsByIterators(
+    thrust::pair<IteratorType, IteratorType>, Flags, Flags, Depth);
+
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::insertByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, Flags, Flags, bool *);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::insertByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, Flags, Flags, ThrustSystem<@thrustarch@>::Vector<bool>::iterator);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::insertByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, Flags, Flags, thrust::discard_iterator<>);
+template typename ThrustSystem<@thrustarch@>::Vector<bool>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::insertByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, Flags, Flags);
+
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::searchByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, NrBoxes *);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::searchByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, ThrustSystem<@thrustarch@>::Vector<NrBoxes>::iterator);
+template typename ThrustSystem<@thrustarch@>::Vector<NrBoxes>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::searchByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth);
+
+template typename ThrustSystem<@thrustarch@>::Vector<NrBoxes>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::searchCompacted(
+    thrust::pair<IteratorType, IteratorType>, Depth);
+
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::setFlagsByIterators(
+    thrust::pair<IteratorType, IteratorType>, Flags, Depth);
+
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrix(
+    thrust::pair<IteratorType, IteratorType>,
+    Depth, NrPoints, bool, bool, bool,
+    CooMatrix<@thrustarch@, NrPoints>&);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrix(
+    thrust::pair<IteratorType, IteratorType>,
+    Depth, NrPoints, bool, bool, bool,
+    CooMatrix<@thrustarch@, float>&);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrix(
+    thrust::pair<IteratorType, IteratorType>,
+    Depth, NrPoints, bool, bool, bool,
+    CooMatrix<@thrustarch@, double>&);
+
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::unsetFlagsByIterators(
+    thrust::pair<IteratorType, IteratorType>, Flags, Depth);
+
+#undef IteratorType
+
+
+#define IteratorType                                                                           \
+thrust::transform_iterator<                                                                    \
+    GridPointsFunctor<@dim@, @real@, @maxDepth@, @grid@<@dim@, @real@>, @map@<@dim@, @real@>>, \
+    thrust::zip_iterator<                                                                      \
+        thrust::tuple<                                                                         \
+            thrust::counting_iterator<NrPoints>,                                               \
+            thrust::transform_iterator<                                                        \
+                DecrementDepthToFunctor<@maxDepth@>,                                           \
+                thrust::permutation_iterator<                                                  \
+                    typename ThrustSystem<@thrustarch@>::ConstBoxIterator<@maxDepth@>,         \
+                    thrust::permutation_iterator<                                              \
+                        typename ThrustSystem<@thrustarch@>::Vector<NrBoxes>::const_iterator,  \
+                        thrust::transform_iterator<                                            \
+                            IDivideByFunctor,                                                  \
+                            thrust::counting_iterator<NrPoints>>>>>>>>
+
+template thrust::pair<IteratorType, IteratorType>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::makePointIteratorPairOverDepth(Depth,
+                                                                                         @grid@<@dim@, @real@>,
+                                                                                         @map@<@dim@, @real@>,
+                                                                                         Flags);
+
+template thrust::pair<IteratorType, IteratorType>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::makePointIteratorPairByFlags(Depth, Flags,
+                                                                                       @grid@<@dim@, @real@>,
+                                                                                       @map@<@dim@, @real@>,
+                                                                                       Flags);
+
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::changeFlagsByIterators(
+    thrust::pair<IteratorType, IteratorType>, Flags, Flags, Depth);
+
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::insertByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, Flags, Flags, bool *);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::insertByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, Flags, Flags, ThrustSystem<@thrustarch@>::Vector<bool>::iterator);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::insertByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, Flags, Flags, thrust::discard_iterator<>);
+template typename ThrustSystem<@thrustarch@>::Vector<bool>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::insertByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, Flags, Flags);
+
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::searchByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, NrBoxes *);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::searchByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth, ThrustSystem<@thrustarch@>::Vector<NrBoxes>::iterator);
+template typename ThrustSystem<@thrustarch@>::Vector<NrBoxes>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::searchByIterators(
+    thrust::pair<IteratorType, IteratorType>, Depth);
+
+template typename ThrustSystem<@thrustarch@>::Vector<NrBoxes>
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::searchCompacted(
+    thrust::pair<IteratorType, IteratorType>, Depth);
+
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::setFlagsByIterators(
+    thrust::pair<IteratorType, IteratorType>, Flags, Depth);
+
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrix(
+    thrust::pair<IteratorType, IteratorType>,
+    Depth, NrPoints, bool, bool, bool,
+    CooMatrix<@thrustarch@, NrPoints>&);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrix(
+    thrust::pair<IteratorType, IteratorType>,
+    Depth, NrPoints, bool, bool, bool,
+    CooMatrix<@thrustarch@, float>&);
+template void
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::transitionMatrix(
+    thrust::pair<IteratorType, IteratorType>,
+    Depth, NrPoints, bool, bool, bool,
+    CooMatrix<@thrustarch@, double>&);
+
+template NrBoxes
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::unsetFlagsByIterators(
+    thrust::pair<IteratorType, IteratorType>, Flags, Depth);
+
+#undef IteratorType
+
+} // namespace b12

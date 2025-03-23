@@ -1,0 +1,20 @@
+
+#define INCLUDE_IMPLICIT_BOX_TREE_MEMBER_DEFINITIONS
+#include "ImplicitBoxTree.h"
+#undef INCLUDE_IMPLICIT_BOX_TREE_MEMBER_DEFINITIONS
+
+
+namespace b12 {
+
+template ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::ImplicitBoxTree(
+    const ImplicitBoxTree<@thrustarch2@, @dim2@, @real2@, @maxDepth2@>&);
+
+template ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>&
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::operator=(
+    const ImplicitBoxTree<@thrustarch2@, @dim2@, @real2@, @maxDepth2@>&);
+
+template bool
+ImplicitBoxTree<@thrustarch@, @dim@, @real@, @maxDepth@>::hasSameBoxes(
+    const ImplicitBoxTree<@thrustarch2@, @dim2@, @real2@, @maxDepth2@>&) const;
+
+} // namespace b12
